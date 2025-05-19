@@ -1,0 +1,9 @@
+{
+  "name": "com.ollama.translator",
+  "description": "Ollama Translation Native Messaging Host",
+  "path": "/Users/dandrake/Documents/projects/scratch/translateExtension/ollama_host.py",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://efikmkhalaobapffbkegghekdmdfoogp/"
+  ]
+} 

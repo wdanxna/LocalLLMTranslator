@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Text Translator",
+  "version": "1.0",
+  "description": "Translates selected text to Chinese and appends the original text.",
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "scripting",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "http://localhost:11434/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+} 
