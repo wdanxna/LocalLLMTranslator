@@ -51,9 +51,10 @@ class OllamaTranslateService extends TranslationService {
                 throw new Error('Maximum retry attempts reached');
             }
 
-            console.log('Connecting to translation service');
             await this.connect();
-            console.log('Connected');
+            
+            // Get the context around the selected text
+            const context = await this.getContext(text);
             
             return new Promise((resolve, reject) => {
                 const messageListener = (response) => {
@@ -70,7 +71,8 @@ class OllamaTranslateService extends TranslationService {
                 this.port.onMessage.addListener(messageListener);
                 this.port.postMessage({
                     type: 'translate',
-                    text: text
+                    text: text,
+                    context: context
                 });
             });
         } catch (error) {
@@ -84,6 +86,44 @@ class OllamaTranslateService extends TranslationService {
             }
             throw error;
         }
+    }
+
+    async getContext(selectedText) {
+        // Get the active tab's content
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const [{ result }] = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: (text) => {
+                const selection = window.getSelection();
+                if (!selection.rangeCount) return { before: '', after: '' };
+
+                const range = selection.getRangeAt(0);
+                const preCaretRange = range.cloneRange();
+                const postCaretRange = range.cloneRange();
+
+                // Get text before selection
+                preCaretRange.setStart(range.startContainer, 0);
+                preCaretRange.setEnd(range.startContainer, range.startOffset);
+                const beforeText = preCaretRange.toString();
+
+                // Get text after selection
+                postCaretRange.setStart(range.endContainer, range.endOffset);
+                postCaretRange.setEnd(range.endContainer, range.endContainer.length);
+                const afterText = postCaretRange.toString();
+
+                // Extract last 10 words before and first 10 words after
+                const beforeWords = beforeText.trim().split(/\s+/).slice(-10).join(' ');
+                const afterWords = afterText.trim().split(/\s+/).slice(0, 10).join(' ');
+
+                return {
+                    before: beforeWords,
+                    after: afterWords
+                };
+            },
+            args: [selectedText]
+        });
+
+        return result;
     }
 }
 

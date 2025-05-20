@@ -51,16 +51,41 @@ def send_message(message):
     except Exception as e:
         logging.error(f"Error sending message: {str(e)}")
 
-def translate_text(text):
+def translate_text(text, context=None):
     try:
         logging.info(f"Attempting to translate text: {text}")
+        logging.info(f"Context: {context}")
+        
         # Prepare the request to Ollama
         conn = http.client.HTTPConnection('localhost', 11434)
         headers = {'Content-Type': 'application/json'}
+        
+        # Create a prompt that includes context
+        prompt = f"""You are a precise Chinese translator. Your task is to translate the text between <translate> tags into Chinese.
+
+Rules:
+1. Use the context between <context> tags to ensure accurate, authentic and natural translation
+2. Output ONLY the Chinese translation
+3. Do not add any explanations, comments, or parentheses
+4. Do not include the original text
+5. Do not add any additional text
+
+<context>
+{context.get('before', '')} {text} {context.get('after', '')}
+</context>
+<translate>{text}</translate>
+
+Translation:/no_think"""
+        logging.info(f"Prompt: {prompt}")
         body = json.dumps({
-            "model": "phi4:latest",
-            "prompt": f"Translate the following English text to Chinese, maintaining the original meaning and tone. Only output the Chinese translation, nothing else:\n\n{text}",
-            "stream": False
+            "model": "qwen3:4b",
+            "prompt": prompt,
+            "stream": False,
+            # "temperature": 0.12,  # Lower temperature for more focused output
+            # "top_p": 0.1,       # More conservative sampling
+            # "top_k": 10,        # Limit token choices
+            # "repeat_penalty": 1.2,  # Slightly penalize repetition
+            "stop": ["</context>", "\n","(", "（", "【", "「", "『", "（", "）", "】", "」", "』", "）", "Translation:", "翻译：", "译文："]  # Stop at these tokens
         })
         
         # Send request to Ollama
@@ -76,6 +101,7 @@ def translate_text(text):
         # Parse response
         result = json.loads(response.read().decode('utf-8'))
         translation = result.get('response', '').strip()
+        translation = translation.split("\n\n")[-1]
         logging.info(f"Received translation: {translation}")
         
         return {"result": translation}
@@ -98,12 +124,13 @@ def main():
                 
             if message.get('type') == 'translate':
                 text = message.get('text', '')
+                context = message.get('context', {})
                 if not text:
                     logging.warning("No text provided for translation")
                     send_message({"error": "No text provided for translation"})
                     continue
                     
-                result = translate_text(text)
+                result = translate_text(text, context)
                 send_message(result)
             else:
                 logging.warning(f"Unknown message type: {message.get('type')}")
