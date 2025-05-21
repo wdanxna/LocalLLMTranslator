@@ -69,6 +69,7 @@ Rules:
 3. Do not add any explanations, comments, or parentheses
 4. Do not include the original text
 5. Do not add any additional text
+6. Only translate the text between <translate> tags, nothing else
 
 <context>
 {context.get('before', '')} {text} {context.get('after', '')}
@@ -83,9 +84,9 @@ Translation:/no_think"""
             "stream": False,
             # "temperature": 0.12,  # Lower temperature for more focused output
             # "top_p": 0.1,       # More conservative sampling
-            # "top_k": 10,        # Limit token choices
-            # "repeat_penalty": 1.2,  # Slightly penalize repetition
-            "stop": ["</context>", "\n","(", "（", "【", "「", "『", "（", "）", "】", "」", "』", "）", "Translation:", "翻译：", "译文："]  # Stop at these tokens
+            "top_k": 5,        # Limit token choices
+            "repeat_penalty": 1.15,  # Slightly penalize repetition
+            # "stop": ["</context>", "\n","(", "（", "【", "「", "『", "（", "）", "】", "」", "』", "）", "Translation:", "翻译：", "译文："]  # Stop at these tokens
         })
         
         # Send request to Ollama
@@ -101,8 +102,8 @@ Translation:/no_think"""
         # Parse response
         result = json.loads(response.read().decode('utf-8'))
         translation = result.get('response', '').strip()
-        translation = translation.split("\n\n")[-1]
         logging.info(f"Received translation: {translation}")
+        translation = translation.split("\n\n")[-1]
         
         return {"result": translation}
     except Exception as e:

@@ -10,10 +10,18 @@
     "nativeMessaging"
   ],
   "host_permissions": [
-    "http://localhost:11434/*"
+    "http://localhost:11434/*",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"]
+    }
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi9DCi8oPj0WNm8t1zQxX"
 } 

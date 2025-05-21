@@ -23,7 +23,13 @@ class OllamaTranslateService extends TranslationService {
                     this.port.onMessage.addListener((response) => {
                         if (response.error) {
                             reject(new Error(response.error));
+                        } else if (response.status === 'ready') {
+                            // Native host is ready, connection successful
+                            // logging.debug("Native host ready, connection successful.")
+                            this.retryCount = 0; // Reset retries on successful connection
+                            resolve(); 
                         } else {
+                            // Assuming any other message is a translation result for now
                             resolve(response.result);
                         }
                     });
@@ -42,9 +48,11 @@ class OllamaTranslateService extends TranslationService {
                 throw new Error(`Failed to connect to native host: ${error.message}`);
             }
         }
+        // If port already exists, assume it's connected or connection is in progress
+        return Promise.resolve();
     }
 
-    async translate(text) {
+    async translate(text, context = null) {
         try {
             if (this.retryCount >= this.maxRetries) {
                 this.retryCount = 0;
@@ -53,8 +61,11 @@ class OllamaTranslateService extends TranslationService {
 
             await this.connect();
             
-            // Get the context around the selected text
-            const context = await this.getContext(text);
+            let finalContext = context;
+            if (!finalContext) {
+                // Get the context around the selected text if not provided
+                finalContext = await this.getContext(text);
+            }
             
             return new Promise((resolve, reject) => {
                 const messageListener = (response) => {
@@ -72,7 +83,7 @@ class OllamaTranslateService extends TranslationService {
                 this.port.postMessage({
                     type: 'translate',
                     text: text,
-                    context: context
+                    context: finalContext
                 });
             });
         } catch (error) {
