@@ -52,7 +52,7 @@ class OllamaTranslateService extends TranslationService {
         return Promise.resolve();
     }
 
-    async translate(text, context = null) {
+    async translate(text, context = null, settings = null) {
         try {
             if (this.retryCount >= this.maxRetries) {
                 this.retryCount = 0;
@@ -62,8 +62,8 @@ class OllamaTranslateService extends TranslationService {
             await this.connect();
             
             let finalContext = context;
-            if (!finalContext) {
-                // Get the context around the selected text if not provided
+            if (!finalContext && settings && settings.translationPrompt && settings.translationPrompt.includes('{context_before}')) { // Check if prompt uses context
+                // Get the context around the selected text if not provided and if prompt uses it
                 finalContext = await this.getContext(text);
             }
             
@@ -83,7 +83,8 @@ class OllamaTranslateService extends TranslationService {
                 this.port.postMessage({
                     type: 'translate',
                     text: text,
-                    context: finalContext
+                    context: finalContext || { before: '', after: '' }, // Ensure context is always an object
+                    settings: settings // Pass all settings to the native host
                 });
             });
         } catch (error) {

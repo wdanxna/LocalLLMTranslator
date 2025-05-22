@@ -2,6 +2,28 @@ import { TranslationServiceFactory } from './translator.js';
 
 const translator = TranslationServiceFactory.createService('ollama');
 
+// Default settings (should ideally be kept in one place, e.g., a shared module or duplicated for now)
+const defaultSettings = {
+    ollamaApiUrl: 'http://localhost:11434',
+    llmModel: 'qwen3:4b',
+    translationPrompt: `You are a precise Chinese translator. Your task is to translate the text between <translate> tags into Chinese.\n\nRules:\n1. Use the context between <context> tags to ensure accurate, authentic and natural translation\n2. Output ONLY the Chinese translation\n3. Do not add any explanations, comments, or parentheses\n4. Do not include the original text\n5. Do not add any additional text\n\n<context>\n{context.before} {text} {context.after}\n</context>\n<translate>{text}</translate>\n\nTranslation:/no_think`,
+    temperature: 0.1,
+    topP: 0.1,
+    topK: 10,
+    repeatPenalty: 1.2,
+    dataStoragePath: '',
+    logFilePath: '/tmp/ollama_translator.log'
+};
+
+// Function to get settings from storage or use defaults
+async function getSettings() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(defaultSettings, (items) => {
+            resolve(items);
+        });
+    });
+}
+
 // Function to inject translated text into the page
 function injectTranslatedText(tabId, selectedText, translatedText) {
   chrome.scripting.executeScript({
@@ -25,7 +47,7 @@ function injectTranslatedText(tabId, selectedText, translatedText) {
   });
 }
 
-// Function to show error messages (can be expanded or moved)
+// Function to show error messages
 function showError(tabId, message) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
@@ -49,7 +71,8 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "translateText" && info.selectionText) {
     try {
-      const translation = await translator.translate(info.selectionText);
+      const settings = await getSettings();
+      const translation = await translator.translate(info.selectionText, null /* context */, settings);
       injectTranslatedText(tab.id, info.selectionText, translation);
     } catch (error) {
       console.error('Translation error:', error);
@@ -63,7 +86,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "translateTextHotkey" && request.text) {
     (async () => {
       try {
-        const translation = await translator.translate(request.text, request.context);
+        const settings = await getSettings();
+        const translation = await translator.translate(request.text, request.context, settings);
         if (sender.tab && sender.tab.id) {
           injectTranslatedText(sender.tab.id, request.text, translation);
         }

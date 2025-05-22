@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text Translator Options</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center;}
+        h2 { color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 30px;}
+        .option-group { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="url"], input[type="number"], textarea, select {
+            width: 95%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;
+        }
+        textarea { min-height: 100px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+        button:hover { background-color: #0056b3; }
+        .reset-btn { background-color: #6c757d; }
+        .reset-btn:hover { background-color: #545b62; }
+        .save-status { margin-top:10px; color: green; font-weight: bold; }
+        .field-container { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text Translator Options</h1>
+
+        <div class="option-group">
+            <h2>API Configuration</h2>
+            <div class="field-container">
+                <label for="ollamaApiUrl">API Base URL (OpenAI Compatible):</label>
+                <input type="url" id="ollamaApiUrl" placeholder="e.g., http://localhost:11434">
+                <button class="reset-btn" data-option="ollamaApiUrl">Reset</button>
+            </div>
+        </div>
+
+        <div class="option-group">
+            <h2>Model Configuration</h2>
+            <div class="field-container">
+                <label for="llmModel">LLM Model:</label>
+                <select id="llmModel"></select>
+                <button id="refreshModels">Refresh Models</button>
+                <button class="reset-btn" data-option="llmModel">Reset</button>
+            </div>
+        </div>
+
+        <div class="option-group">
+            <h2>Prompt Configuration</h2>
+            <div class="field-container">
+                <label for="translationPrompt">Translation Prompt:</label>
+                <textarea id="translationPrompt"></textarea>
+                <button class="reset-btn" data-option="translationPrompt">Reset</button>
+            </div>
+        </div>
+
+        <div class="option-group">
+            <h2>Advanced Parameters</h2>
+            <div class="field-container">
+                <label for="temperature">Temperature:</label>
+                <input type="number" id="temperature" step="0.01" min="0" max="2">
+                <button class="reset-btn" data-option="temperature">Reset</button>
+            </div>
+            <div class="field-container">
+                <label for="topP">Top P:</label>
+                <input type="number" id="topP" step="0.01" min="0" max="1">
+                <button class="reset-btn" data-option="topP">Reset</button>
+            </div>
+            <div class="field-container">
+                <label for="topK">Top K:</label>
+                <input type="number" id="topK" step="1" min="0">
+                <button class="reset-btn" data-option="topK">Reset</button>
+            </div>
+            <div class="field-container">
+                <label for="repeatPenalty">Repeat Penalty:</label>
+                <input type="number" id="repeatPenalty" step="0.01" min="0">
+                <button class="reset-btn" data-option="repeatPenalty">Reset</button>
+            </div>
+        </div>
+        
+        <div class="option-group">
+            <h2>Storage Configuration</h2>
+             <div class="field-container">
+                <label for="dataStoragePath">Data Storage Path:</label>
+                <input type="text" id="dataStoragePath" placeholder="e.g., /Users/user/Documents/TranslatorData">
+                <button class="reset-btn" data-option="dataStoragePath">Reset</button>
+            </div>
+        </div>
+
+        <div class="option-group">
+            <h2>Logging Configuration</h2>
+            <div class="field-container">
+                <label for="logFilePath">Host Log File Path:</label>
+                <input type="text" id="logFilePath" placeholder="e.g., /tmp/ollama_translator.log or C:\Users\user\AppData\Local\Temp\ollama_translator.log">
+                <button class="reset-btn" data-option="logFilePath">Reset</button>
+            </div>
+        </div>
+
+        <button id="save">Save Settings</button>
+        <div id="saveStatus" class="save-status"></div>
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html> 

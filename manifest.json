@@ -7,7 +7,8 @@
     "contextMenus",
     "activeTab",
     "scripting",
-    "nativeMessaging"
+    "nativeMessaging",
+    "storage"
   ],
   "host_permissions": [
     "http://localhost:11434/*",
@@ -23,5 +24,9 @@
       "js": ["content_script.js"]
     }
   ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi9DCi8oPj0WNm8t1zQxX"
 } 

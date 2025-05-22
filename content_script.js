@@ -35,17 +35,25 @@ document.addEventListener('keyup', (event) => {
                 context.after = afterFullText.trim().split(/\s+/).slice(0, 10).join(' ');
             }
             
-            chrome.runtime.sendMessage({
-                type: 'translateTextHotkey',
-                text: selectedText,
-                context: context
-            }, response => {
-                if (chrome.runtime.lastError) {
-                    console.error('Error sending message from content script:', chrome.runtime.lastError.message);
-                } else {
+            if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage({
+                    type: 'translateTextHotkey',
+                    text: selectedText,
+                    context: context
+                }, response => {
+                    if (chrome.runtime.lastError) {
+                        console.error('Error sending message from content script:', chrome.runtime.lastError.message);
+                        // Optionally, inform the user via a temporary message on the page
+                        // showTemporaryMessage(`Translation trigger failed: ${chrome.runtime.lastError.message}`);
+                    } else {
                         // console.log('Hotkey message sent, response:', response);
                     }
                 });
+            } else {
+                console.error("chrome.runtime.sendMessage is not available in this context.");
+                // Optionally, inform the user
+                // showTemporaryMessage("Translation service is currently unavailable from this page context.");
+            }
             } catch (error) {
                 console.error('Error getting context:', error);
             }
