@@ -34,13 +34,35 @@ function injectTranslatedText(tabId, selectedText, translatedText) {
         const range = selection.getRangeAt(0);
         range.deleteContents();
 
+        // Create a container element with special attributes for undo functionality
+        const container = document.createElement("span");
+        container.className = "translation-modification";
+        container.setAttribute("data-original-text", selText);
+        container.setAttribute("data-translated-text", transText);
+        container.style.position = "relative";
+        container.style.cursor = "pointer";
+        container.style.borderRadius = "2px";
+        container.style.padding = "0 2px";
+        container.style.transition = "background-color 0.2s";
+
+        // Add hover effect to indicate it's undoable
+        container.addEventListener("mouseenter", function() {
+          this.style.backgroundColor = "rgba(255, 255, 0, 0.1)";
+          this.setAttribute("title", "SHIFT+click to undo translation");
+        });
+        
+        container.addEventListener("mouseleave", function() {
+          this.style.backgroundColor = "transparent";
+        });
+
         const translatedNode = document.createTextNode(transText + " ");
         const originalNode = document.createElement("span");
         originalNode.textContent = `(${selText})`;
         originalNode.style.color = "grey";
 
-        range.insertNode(originalNode);
-        range.insertNode(translatedNode);
+        container.appendChild(translatedNode);
+        container.appendChild(originalNode);
+        range.insertNode(container);
       }
     },
     args: [selectedText, translatedText]

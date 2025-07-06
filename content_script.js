@@ -1,5 +1,6 @@
 let shiftPressTime = null;
 const MAX_SHIFT_TAP_DURATION = 250; // Maximum duration in milliseconds for a "brief tap"
+let hoveredTranslation = null; // Track which translation element is being hovered
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Shift' && !event.repeat) {
@@ -16,9 +17,34 @@ document.addEventListener('keyup', (event) => {
         // Reset the press time
         shiftPressTime = null;
         
-        // Only trigger translation if it was a brief tap (not a long hold)
+        // Only trigger if it was a brief tap (not a long hold)
         if (shiftDuration <= MAX_SHIFT_TAP_DURATION) {
-            const selectedText = window.getSelection().toString().trim();
+            // Check if we're hovering over a translation modification
+            console.log('hoveredTranslation', hoveredTranslation);
+            if (hoveredTranslation) {
+                undoTranslation(hoveredTranslation);
+                return; // Don't proceed with new translation
+            }
+            
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+
+            // Also, if the current selection already contains the translation, we also undo the translation
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const ancestor = range.commonAncestorContainer;
+                const searchScope = ancestor.nodeType === Node.ELEMENT_NODE ? ancestor : ancestor.parentElement;
+                
+                if (searchScope) {
+                    const translationsInScope = searchScope.querySelectorAll('.translation-modification');
+                    for (const elem of translationsInScope) {
+                        if (selection.containsNode(elem, true)) {
+                            undoTranslation(elem);
+                            return; // Exit after undoing
+                        }
+                    }
+                }
+            }
 
             if (selectedText) {
                 // Try to get context
@@ -71,6 +97,37 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
+// Track when mouse enters/leaves translation modifications
+document.addEventListener('mouseover', (event) => {
+    if (event.target.classList.contains('translation-modification')) {
+        console.log('mouseover', event.target);
+        hoveredTranslation = event.target;
+    }
+});
+
+document.addEventListener('mouseout', (event) => {
+    if (event.target.classList.contains('translation-modification')) {
+        hoveredTranslation = null;
+    }
+});
+
+// Function to undo a translation
+function undoTranslation(translationElement) {
+    const originalText = translationElement.getAttribute('data-original-text');
+    
+    if (originalText) {
+        // Create a text node with the original text
+        const originalTextNode = document.createTextNode(originalText);
+        
+        // Replace the entire translation element with the original text
+        translationElement.parentNode.replaceChild(originalTextNode, translationElement);
+        
+        // Show feedback that the translation was undone
+        showTemporaryMessage('Translation undone', 1500);
+    }
+    hoveredTranslation = null;
+}
+
 // Helper to show a temporary message on the page (optional)
 function showTemporaryMessage(message, duration = 3000) {
     const div = document.createElement('div');
@@ -85,6 +142,8 @@ function showTemporaryMessage(message, duration = 3000) {
     div.style.borderRadius = '5px';
     document.body.appendChild(div);
     setTimeout(() => {
-        document.body.removeChild(div);
+        if (document.body.contains(div)) {
+            document.body.removeChild(div);
+        }
     }, duration);
 } 
