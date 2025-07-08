@@ -97,18 +97,16 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
-// Track when mouse enters/leaves translation modifications
+// Track when mouse is over a translation modification. This is more robust
+// than the previous implementation because it correctly handles child elements
+// inside the translated span.
 document.addEventListener('mouseover', (event) => {
-    if (event.target.classList.contains('translation-modification')) {
-        console.log('mouseover', event.target);
-        hoveredTranslation = event.target;
-    }
-});
-
-document.addEventListener('mouseout', (event) => {
-    if (event.target.classList.contains('translation-modification')) {
-        hoveredTranslation = null;
-    }
+    // Find the closest ancestor that is a translation modification
+    const translationElement = event.target.closest('.translation-modification');
+    
+    // Update the hoveredTranslation state. If the mouse is not over a 
+    // translation element (or its children), this will be null.
+    hoveredTranslation = translationElement;
 });
 
 // Function to undo a translation
